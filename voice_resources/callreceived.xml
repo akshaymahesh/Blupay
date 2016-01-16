@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="woman">Welcome to Blupay Financial Services. To sign up, please text the number you have called. To speak to a customer service professional, please stay on the line or press 0. </Say>
+<Hangup/>
+</Response>
