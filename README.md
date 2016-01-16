@@ -7,3 +7,10 @@ While the demo and presentations were very successful, the original code was ter
 
 ### Implementation Information
 Blupay 2.0 continues to use the Twilio REST API in PHP. User data is stored in a mySQL database. The entire project is hosted live on my personal server.
+
+### Updates
+2.0 - Initial release of my re-write of Blupay.
+
+Added enhanced logging, testing mode, PHP session
+tracking. Basic I/O has been completely rewritten, along with DB access.
+Send/Request money features are still in progress.
