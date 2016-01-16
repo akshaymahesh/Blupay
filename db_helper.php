@@ -1,16 +1,17 @@
 <?php
 
+	require_once "/home/akshhhlt/public_html/blupay/keys.php"; // passwords, api key, etc.
+
 	function logToFile($command, $result){
-		$pathToLog = "/home/akshhhlt/public_html/blupay/sql_log";
-		error_log("$command ::: $result \n", 3, $pathToLog);
+		error_log("$command ::: $result \n", 3, logPath);
 		if ($command == '')
-			error_log("ERROR: Command is blank.\n", 3, $pathToLog);
+			error_log("ERROR: Command is blank.\n", 3, logPath);
 		if ($result == '')
-			error_log("ERROR: Result is blank.\n", 3, $pathToLog);
+			error_log("ERROR: Result is blank.\n", 3, logPath);
 	}
 
 	function checkConn(){
-		$GLOBALS['sqli_conn'] = mysqli_connect("localhost", "", "", "akshhhlt_blupay");
+		$GLOBALS['sqli_conn'] = mysqli_connect("localhost", db_username, db_password, "akshhhlt_blupay");
 		if ($GLOBALS['sqli_conn']->connect_error){
 			$status = ("Failed: " . $GLOBALS['sqli_conn']->connect_error);
 		}
@@ -50,9 +51,11 @@
 
 	}
 
+	/*** unsets session vars, empties user information from db ***/
 	function resetDemo(){
 		checkConn();
-		$_SESSION = array();
+		unset($_SESSION['lastTextTime']);
+		unset($_SESSION['lastAction']);
 		$sql = "TRUNCATE TABLE `akshhhlt_blupay`.`users`";
 		$result = mysqli_query($GLOBALS['sqli_conn'], $sql);
 		logToFile($sql, $result);
@@ -60,6 +63,6 @@
 		return "reset successful";
 	}
 
-	if ($_GET['action'] == 'reset') resetDemo();
+	if (strtolower($_GET['action']) == 'reset') resetDemo();
 
 ?>

@@ -1,28 +1,31 @@
 <?php 
 
-	require "/home/akshhhlt/public_html/blupay/twilio-php-master/Services/Twilio.php";
-	require "/home/akshhhlt/public_html/blupay/db_helper.php";
+	require_once "/home/akshhhlt/public_html/blupay/twilio-php-master/Services/Twilio.php";
+	require_once "/home/akshhhlt/public_html/blupay/db_helper.php";
+	require_once "/home/akshhhlt/public_html/blupay/keys.php"; // passwords, api key, etc.
 
-	$testingMode = TRUE; // only simulates texts (saves money on Twilio)
+	/*** Simulates texts ***/ 
+	$testingMode = TRUE;
 
 	/***** TWILLIO ACCOUNT INFO *****/
-	$AccountSid = "";
-	$AuthToken = "";
-	$server_phone_num = "";
+	$AccountSid = AccountSid;
+	$AuthToken = AuthToken;
+	$server_phone_num = server_phone_num;
 	$client = new Services_Twilio($AccountSid, $AuthToken);
 
 	// define and log relevant information
 	$user_phone_num = $_GET["From"];
 	$message_body = $_GET["Body"];
 	$isExistingUser = doesUserExist($user_phone_num);
-	$balance = getBalance($GLOBALS['user_phone_num']);
-	logToFile(time(), "SMS Recieved from \"$user_phone_num\". isExistingUser: $isExistingUser. SMS: $message_body");
+	$balance = getBalance($user_phone_num);
+	$action = parseText($message_body); // check for keywords in message
+	logToFile(time(), "SMS Recieved from \"$user_phone_num\". isExistingUser: $isExistingUser. Action: $action. SMS: $message_body");
 
-	$action = parseText($message_body); // figure out if SEND (action=1), REQUEST (action=2), or BALANCE (action=3) were said.
+
 	if ($isExistingUser) existing_user($action);
 	else onboard_user($message_body);
 
-
+	/*** Asks new user for name, inserts user into db ***/
 	function onboard_user($message_body){
 		logToFile("onboard user", $message_body);
 		session_start();
@@ -40,10 +43,12 @@
 		send_text(0, $text);
 	}
 
+	/*** Redirects existing user to appropriate action ***/
 	function existing_user($action){
 		logToFile("existing user", "action = $action");
 		session_start();
 
+		if ($action == 999) return; // reset was initiated, skip sending text
     	if ($action == 0)
 			$text = "BLUPAY :: Welcome back. Reply with SEND, REQUEST, BALANCE or '?'";
 		if ($action == 1)
@@ -54,10 +59,10 @@
 			$balance = getBalance($GLOBALS['user_phone_num']);
 			$text = "BLUPAY :: Your balance is $balance dollars.";
 		}
-		if ($action == 999) return;
 		send_text(0, $text);
 	}
 
+	/*** Determines message intent by looking for keywords ***/
 	function parseText($message_body){
 		$message_body = strtolower($message_body);
 		$action = 0; // if $action is unchanged, it's not one of the commands
@@ -76,11 +81,12 @@
 		return $action;
 	}
 
+	/*** Uses Twilio API to send text ***/
 	function send_text($target_phone_num, $sms){
-		global $client, $server_phone_num, $user_phone_num, $testingMode;
+		global $client, $user_phone_num, $testingMode;
 		if ($target_phone_num == 0) $target_phone_num = $user_phone_num;
 		$smsSent = ($testingMode ? 0 : $client->account->sms_messages->create(
-				    $server_phone_num,
+				    server_phone_num,
 				    $target_phone_num,
 				    $sms));
 		logToFile("Sent text: \"$sms\"", 1);
